@@ -8,6 +8,17 @@ var logger = require('morgan')
 const dotenv = require('dotenv')
 dotenv.config()
 
+// Mongoose
+var mongoose = require('mongoose')
+var mongoDB = process.env.DB_CREDS
+mongoose.connect(mongoDB, { useNewUrlParser: true, useCreateIndex: true })
+var db = mongoose.connection
+db.on('error', console.error.bind(console, 'MongoDB connection error'))
+
+// import the models
+var token = require('./models/token')
+var user = require('./models/user')
+
 var indexRouter = require('./routes/index')
 var usersRouter = require('./routes/userRoutes')
 
@@ -23,6 +34,10 @@ app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
+// for validation
+app.use(express.json())
+
+// Routing
 app.use('/', indexRouter)
 app.use('/users', usersRouter)
 
@@ -41,5 +56,7 @@ app.use(function (err, req, res, next) {
   res.status(err.status || 500)
   res.render('error')
 })
+
+console.log('Lets light this candle!')
 
 module.exports = app
