@@ -1,26 +1,23 @@
 // Helper Packages
 var crypto = require('crypto')
 var nodemailer = require('nodemailer')
-// var assert = require('assert')
-// var validator = require('validator')
 
 var mongoose = require('mongoose')
 
-// import user Schema
-// import token Schema
+// Validation
+const { body, validationResult } = require('express-validator/check')
+const { sanitizeBody } = require('express-validator/filter')
 
 // Model = how the routes display
 var User = require('../models/user')
 var Token = require('../models/token')
 
-// Controller = what the routes DO.
+// Controller = what the routes do
+
+// Generic leftover route
 exports.index = function (req, res, next) {
   res.render('index', { title: 'User Home' })
 }
-
-// Validation
-const { body, check, oneOf, validationResult } = require('express-validator/check')
-const { sanitizeBody } = require('express-validator/filter')
 
 // Some logic to ensure all users have been verified.  If a user has not been
 // verified, return a status code of (401) Unauthorized with the appropriate
@@ -28,28 +25,18 @@ const { sanitizeBody } = require('express-validator/filter')
 
 // when a user signs up, instead of logging them in immediately we send them a confirmation email
 exports.signupPost = function (req, res, next) {
-  // res.send('NOT WORKING YET: signupPost')
+  // VALIDATE
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() })
+  }
 
-  // outdated, see above
-  // req.assert('name', 'Name cannot be blank').notEmpty()
-  // req.assert('email', 'Email is not valid').isEmail()
-  // req.assert('email', 'Email cannot be blank').notEmpty()
-  // req.assert('password', 'Password must be at least 6 characters').len(4)
-  // req.sanitize('email').normalizeEmail({ remove_dots: false })
+  console.log('NO ERRORS FOUND!')
 
-  // Check for validation errors
-  // var errors = req.validationErrors()
-  // if (errors) { return res.status(400).send(errors) }
-
-  // check(req.body.email).isEmail()
-  // var errors = req.validationResult
-  // console.log('errors: ' + errors)
-  // if (errors) { return res.status(400).json({ errors: errors.array() }) }
-
-  // Make sure user account doesn't already exist
+  // GOOD TO GO!
   User.findOne({ email: req.body.email }, function (err, user) {
     // Make sure user doesn't already exist
-    // console.log('USER: ' + user + ' req.body.email: ' + req.body.email + ' email: ' + user.email)
+
     if (user) { return res.status(400).send({ msg: 'The email address you have entered is already associated with an account' }) }
 
     // Create and save the user
@@ -80,55 +67,13 @@ exports.signupPost = function (req, res, next) {
 // This uses token based authentication.  It could be easy to change the code to
 // use passport instead
 exports.loginPost = function (req, res, next) {
-  // res.send('NOT WORKING YET: loginpost').
-  // Question: how many res.send s can you send?
-
-  // This is outdated!
-  // https://express-validator.github.io/docs/
-  // req.isEmail('email', 'Email is not valid').isEmail()
-  // req.assert('email', 'Email cannot be blank').notEmpty()
-  // req.assert('password', 'Password cannot be blank').notEmpty()
-  // req.sanitize('email').normalizeEmail({ remove_dots: false })
-
-  // Check for validation errors
-  // var errors = req.validationErrors()
-  // if (errors) return res.status(400).send(errors)
-  // console.log('email:', req.body.email)
-  // body('email', 'Email cannot be blank').isEmpty()
-
-  // Check for validation errors
-  // var errors = validationResult(req)
-  // console.log('errors: ', errors.array())
-  // // if (!errors.isEmpty()) return res.status(422).jsonp(errors.array())
-  // check('email')
-  //   .exists().withMessage('This mail address does not exist')
-  //   .isEmail().withMessage('this mail address is not valid')
-
-  // const errorFormatter = ({ location, msg, param, value }) => {
-  //  return `${location}[${param}: ${msg}`
-  // }
-  // const result = validationResult(req)
-  // if (!result.isEmpty()) {
-  //   return res.status(422).json({ errors: result.array() })
-  // }
-
-  // asyc function validateMe() {
-
-  // }
-  // validationResult(req)
-
-  // validationHandler()
-
-  // validateMe()
-
+  // VALIDATE
   const errors = validationResult(req)
-  // console.log('errors.isEmpty()', !errors.isEmpty())
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() })
   }
 
-  console.log('NO ERRORS FOUND!')
-  // console.log('results:', validationResult(req.json).array())
+  // GOOD TO GO!
 
   User.findOne({ email: req.body.email }, function (err, user) {
     if (!user) { return res.status(401).send({ msg: 'The email address ' + req.body.email + ' is not associated with any account.  Please try again.' }) }
@@ -155,15 +100,15 @@ If you prefer, you can have the user automatically confirm the token by clicking
 */
 
 exports.confirmationPost = function (req, res, next) {
-  // outdated, see above
-  // req.assert('email', 'Email is not valid').isEmail()
-  // req.assert('email', 'Email cannot be blank').notEmpty()
-  // req.assert('token', 'Token cannot be blank').notEmpty()
-  // req.sanitize('email').normalizeEmail({ remove_dots: false })
+  // VALIDATE
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() })
+  }
 
-  // Check for validation errors
-  // var errors = req.validationErrors()
-  // if (errors) { return res.status(400).send(errors) }
+  // console.log('NO ERRORS FOUND!')
+
+  // GOOD TO GO!
 
   // Find a matching token
   Token.findOne({ token: req.body.token }, function (err, token) {
@@ -187,22 +132,14 @@ exports.confirmationPost = function (req, res, next) {
 // It's inevitable that some users will not be able to verify their account before their token expires.
 // Let's help 'em out!
 exports.resendTokenPost = function (req, res, next) {
-  // outdated, see above
-  // req.assert('email', 'Email is not valid').isEmail()
-  // req.assert('email', 'Email cannot be blank').notEmpty()
-  // req.sanitize('email').normalizeEmail({ remove_dots: false })
-
-  // Check for validation errors
-  // var errors = req.validationErrors()
-  // if (errors) return res.status(400).send(errors)
-
+  // VALIDATE
   const errors = validationResult(req)
   // console.log('errors.isEmpty()', !errors.isEmpty())
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() })
   }
 
-  console.log('NO ERRORS FOUND!')
+  // GOOD TO GO
 
   User.findOne({ email: req.body.email }, function (err, user) {
     if (!user) return res.status(400).send({ msg: 'We were unable to find a user with that email.' })
@@ -234,11 +171,6 @@ exports.validate = (method) => {
   switch (method) {
     case 'signupPost' : {
       return [
-      // req.assert('name', 'Name cannot be blank').notEmpty()
-      // req.assert('email', 'Email is not valid').isEmail()
-      // req.assert('email', 'Email cannot be blank').notEmpty()
-      // req.assert('password', 'Password must be at least 6 characters').len(4)
-      // req.sanitize('email').normalizeEmail({ remove_dots: false })
         body('name').exists().withMessage('Name missing'),
         body('email').exists().withMessage('Email missing'),
         body('email').isEmail().withMessage('Email invalid'),
@@ -250,10 +182,6 @@ exports.validate = (method) => {
     }
     case 'loginPost': {
       return [
-        // body('email', 'E-mail address missing!').exists(),
-        // body('email', 'E-mail address invalid').isEmail(),
-        // body('password', 'Password cannot be blank').exists(),
-        // body.sanitize('email').normalizeEmail({ remove_dots: false })
         body('email').exists().withMessage('Email missing'),
         body('email').isEmail().withMessage('Email invalid'),
         body('password').exists().withMessage('Password missing'),
@@ -263,21 +191,15 @@ exports.validate = (method) => {
     }
     case 'confirmationPost' : {
       return [
-        // req.assert('email', 'Email is not valid').isEmail()
-        // req.assert('email', 'Email cannot be blank').notEmpty()
-        // req.assert('token', 'Token cannot be blank').notEmpty()
-        // req.sanitize('email').normalizeEmail({ remove_dots: false })
         body('email').exists().withMessage('Email missing'),
         body('email').isEmail().withMessage('Email invalid'),
         body('token').exists().withMessage('Token missing'),
         sanitizeBody('email').normalizeEmail({ gmail_remove_dots: false })
       ]
+      break
     }
     case 'resendTokenPost' : {
       return [
-        // req.assert('email', 'Email is not valid').isEmail()
-        // req.assert('email', 'Email cannot be blank').notEmpty()
-        // req.sanitize('email').normalizeEmail({ remove_dots: false })
         body('email').exists().withMessage('Email missing'),
         body('email').isEmail().withMessage('Email invalid'),
         sanitizeBody('email').normalizeEmail({ gmail_remove_dots: false })
@@ -289,28 +211,6 @@ exports.validate = (method) => {
       console.error(e.lineNumber)
   } // switch
 } // exports.validate
-
-// returning validation .msg to the API
-// This is not being used.
-const validationHandler = next => result => {
-  console.log('VH')
-  if (result.isEmpty()) {
-    return
-  } else {
-    console.log('RA', result.array().map(i => `'${i.param}' has ${i.msg}`).join(''))
-  }
-  if (!next) {
-    throw new Error(
-      result.array().map(i => `'${i.param}' has ${i.msg}`).join('')
-    )
-  } else {
-    return next(
-      new Error(
-        result.array().map(i => `'${i.param}' has ${i.msg}`).join('')
-      )
-    )
-  }
-}
 
 exports.generateToken = function (user) {
   console.log('token generated for:', user)
